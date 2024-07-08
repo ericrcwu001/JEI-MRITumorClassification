@@ -1,0 +1,12 @@
+matplotlib~=3.8.4
+seaborn~=0.13.2
+numpy~=1.26.4
+pandas~=2.2.2
+tensorflow==2.14
+tensorflow-metal==1.1.0
+jupyter
+opencv-python~=4.10.0.84
+imutils~=0.5.4
+tqdm
+scipy~=1.14.0
+scikit-learn
