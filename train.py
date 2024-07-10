@@ -4,9 +4,8 @@ import tensorflow as tf
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 
-
 batch_size = 8  # Batch Size
-epochs = 8  # Epoch number
+epochs = 12  # Epoch number
 
 
 def generators(directory):
@@ -39,29 +38,30 @@ def generators(directory):
                                         vertical_flip=False)
 
     # Creating the train and test data.
-    train = generator_train.flow_from_directory(directory+'/Training', target_size=(256, 256),
+    train = generator_train.flow_from_directory(directory + '/Training', target_size=(256, 256),
                                                 batch_size=batch_size, class_mode="categorical", color_mode='rgb',
                                                 subset='training')
 
-    val = generator_train.flow_from_directory(directory+'/Training', target_size=(256, 256),
+    val = generator_train.flow_from_directory(directory + '/Training', target_size=(256, 256),
                                               batch_size=batch_size, class_mode="categorical", color_mode='rgb',
                                               subset='validation')
 
-    test = generator_test.flow_from_directory(directory+'/Testing', target_size=(256, 256),
-                                              batch_size=batch_size, class_mode="categorical", color_mode='rgb', shuffle=False)
+    test = generator_test.flow_from_directory(directory + '/Testing', target_size=(256, 256),
+                                              batch_size=batch_size, class_mode="categorical", color_mode='rgb',
+                                              shuffle=False)
 
     return train, val, test
 
 
 def save_model(model):
     model_json = model.to_json()
-    with open("models/model.json", "w") as json_file:
+    with open("models/fusion.json", "w") as json_file:
         json_file.write(model_json)
-    model.save_weights("models/model.keras")
+    model.save_weights("models/fusion.keras")
     print("Saved model to disk")
 
 
-def train(model, train_generator, val_generator):
+def train_model(model, train_generator, val_generator):
     optimizer = tf.keras.optimizers.legacy.Adam(learning_rate=0.0001, decay=0.0001, clipvalue=0.5)
     model.compile(optimizer=optimizer, loss='categorical_crossentropy',
                   metrics=['categorical_accuracy'])
@@ -69,8 +69,7 @@ def train(model, train_generator, val_generator):
     model1_es = EarlyStopping(monitor='loss', min_delta=1e-11, patience=6, verbose=1)
     model1_rlr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=3, verbose=1)
 
-    history = model.fit(train_generator, steps_per_epoch=train.samples // batch_size, epochs=epochs,
-                        validation_data=val_generator, validation_steps=test.samples // batch_size,
+    history = model.fit(train_generator, epochs=epochs, validation_data=val_generator,
                         callbacks=[model1_es, model1_rlr])
 
     save_model(model)
@@ -109,5 +108,5 @@ def plot_history(history):
 if __name__ == '__main__':
     train, val, test = generators("processed")
     model = feature_fusion()
-    history = train(model, train, val)
+    history = train_model(model, train, val)
     plot_history(history)
